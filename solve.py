@@ -19,7 +19,7 @@ sixty_deg_rot = np.array([[np.cos(np.deg2rad(60)), -np.sin(np.deg2rad(60))],
 
 
 def locate_window():
-    box = pyautogui.locateOnScreen('REMAINING.png')
+    box = pyautogui.locateOnScreen(join('templates', 'REMAINING.png'))
     if box is None:
         raise RuntimeError('Could not locate Hexcells\' "REMAINING" lettering '
                            'on the screen and therefore could not find the Hexcells window!')
@@ -131,8 +131,6 @@ def encode_constraint(
             for v in c:
                 cnf.append([-aux_var, v])
         return CNF(from_clauses=cnf)
-
-
 
 
 class Template:
@@ -442,7 +440,7 @@ class Game:
 
                 if len(hexagons_to_update) == 0:
                     if use_total:
-                        raise RuntimeError('Can\'t solve the puzzle! Solution is ambiguous.')
+                        raise RuntimeError('Can\'t solve the puzzle! Solution is ambiguous. Maybe a game element was detected wrongly.')
                     use_total = True
                     continue
 
@@ -458,7 +456,7 @@ class Game:
                         failed.append(not h.update(img))
                     hexagons_to_update = list(compress(hexagons_to_update, failed))
                     if time() - start_time >= 3:
-                        raise RuntimeError('Failed to update state of game elements')
+                        raise RuntimeError('Failed to update state of game elements after 3 seconds of trying')
 
                 for x in self.hexagons + self.lines:
                     x.check_if_constraint_trivial()
@@ -526,7 +524,7 @@ if __name__ == '__main__':
     # resolution 1440x900
     # font: https://fontsme.com/wp-data/h/487/14487/file/Harabara Mais.otf
 
-    pyautogui.PAUSE = .001  # sleep in seconds after each mouse click
+    pyautogui.PAUSE = .01  # sleep in seconds after each mouse click
 
     # wait for the user to bring the Hexcells window to foreground
     print(f'Sleeping {pyautogui.PAUSE}s after each mouse click')
@@ -535,7 +533,7 @@ if __name__ == '__main__':
     for i in range(10):
         sleep(1)
         print(f'Searching for Hexcells window {i+1}/10')
-        if pyautogui.locateOnScreen('REMAINING.png') is not None:
+        if pyautogui.locateOnScreen(join('templates', 'REMAINING.png')) is not None:
             break
     else:
         print('Error: Could not locate Hexcells\' "REMAINING" lettering on the screen '
@@ -546,6 +544,6 @@ if __name__ == '__main__':
     g = Game()
     try:
         g.solve()
-    except RuntimeError and AssertionError as e:
+    except (RuntimeError, AssertionError) as e:
         traceback.print_exc()
         show_img(g.debug_draw())

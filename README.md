@@ -14,12 +14,12 @@
    - If the variable is true the hexagon is blue and vice versa
  - The constraints imposed by the hints (such as `k`, `{k}`, or `-k-`) are encoded in a boolean formula `B`
    - By definition this formula is satisfiable since there exists a solution to the game
- - `A` contains the truth values of the non orange hexagons i. e. the hexagons whose truth value is already known / determined
- - The true value of a orange hexagon is then determined by contradiction
+ - The set `A` contains the truth values of the non orange hexagons i. e. the hexagons whose truth value is already known / determined
+ - The truth value of an orange hexagon is then determined by contradiction
    - E. g. in order to test if a hexagon is blue, it is assumed that this hexagon is not blue. 
-     If it this makes the boolean formula `B` unsatisfiable then the hexagon must be blue.
-     If the boolean formula is still satisfiable then the truth value of that hexagons remains unknown.
- - The following algorithm repeatedly tries to determine the the truth value of for each hexagon 
+     If this makes the boolean formula `B` unsatisfiable then the hexagon must be blue.
+     If the boolean formula is still satisfiable then the truth value of that hexagon remains unknown.
+ - The following algorithm repeatedly tries to determine the truth value of each hexagon 
    until all truth values have been determined 
    - Note that the game is always solvable without guessing. 
      Therefore, there always exists at least one hexagon whose truth value can be determined.
@@ -36,12 +36,12 @@ while there are hexagons whose truth value is unknown i. e. |A| < |H|:
     if the truth value of h is already known:
       continue
     if B given A ∪ {h ≡ false} is unsatisfiable:
-      -> h is blue
-      A' = A' ∪ {h ≡ true}
+      # h is blue
+      A' <- A' ∪ {h ≡ true}
     elif B given A ∪ {h ≡ true} is unsatisfiable:
-      -> h is not blue
-      A' = A' ∪ {h ≡ false}
-  A = A ∪ A'
+      # h is not blue
+      A' <- A' ∪ {h ≡ false}
+  A <- A ∪ A'
   encode new constraints into B
 ```
 
@@ -49,7 +49,8 @@ while there are hexagons whose truth value is unknown i. e. |A| < |H|:
 
 <!--- comment
 
-Fontsize 35
+Fontsize 24
+https://quicklatex.com/
 
 {STD}(C, k) \Leftrightarrow \sum_{m=1}^{\left|C\right|}c_m=k
 
@@ -61,14 +62,14 @@ Fontsize 35
 \bigwedge\limits_{m=n+k}^{n + \left|C\right| - 1}\neg c_{(m \mod \left|C\right|)+1}
 \right)
 
-{DSH}(C, k) \Leftrightarrow \neg CUR(C, k) \wedge {STD}(C, k)
+{DSH}(C, k) \Leftrightarrow {STD}(C, k) \wedge \neg CUR(C, k)
 
 --->
 
-Assume that `k`, `{k}`, or `-k-` is a constraint. 
-Additionally assume that `C` is the sorted set of hexagons influenced by the constraint,
+Assume that `k`, `{k}`, or `-k-` are constraints. 
+Additionally, assume that `C` is the sorted set of hexagons influenced by a constraint,
 `c_m` is the `m`-th element of `C`,
-and that `k` is the number hexagons that should be blue.
+and that `k` is the number of hexagons that should be blue.
 
 Then the constraints can be encoded into boolean formulas as follows:
 
@@ -77,7 +78,7 @@ Then the constraints can be encoded into boolean formulas as follows:
 <!--- comment
 
 {CUR}'(C, k) \Leftrightarrow 
-\bigvee\limits_{C'\in S}
+\bigvee\limits_{C'\in S_k(C)}
 \left(
 \bigvee\limits_{n=0}^{\left|C'\right|-k}
 \left(
@@ -88,16 +89,16 @@ Then the constraints can be encoded into boolean formulas as follows:
 \bigwedge\limits_{m=n+k+1}^{\left|C'\right|}\neg c'_m
 \right)
 \wedge
-\bigwedge\limits_{c'\in C\setminus C'} \neg c'
+\bigwedge\limits_{c\in C\setminus C'} \neg c
 \right)
 
-{DSH}'(C, k) \Leftrightarrow \neg CUR'(C, k) \wedge {STD}(C, k)
+{DSH}'(C, k) \Leftrightarrow {STD}(C, k) \wedge \neg CUR'(C, k)
 
 --->
 
 Also note that gaps do count as such. Therefore, if there are gaps, the formulas have to be slightly adapted.
 
-Let `S ⊂ 2^C` be the set of subsets of `C` of size greater or equal to `k` in which all hexagons are connected (i. e. there are no gaps between the hexagons).
+Let `S_k(C) ⊂ 2^C` be the set of subsets of `C` of size greater or equal to `k` in which all hexagons are connected (i. e. there are no gaps between the hexagons).
 
 <div align="center"><img src="images/formulas_2.png" width="100%"> </div>
 
@@ -113,7 +114,7 @@ Let `S ⊂ 2^C` be the set of subsets of `C` of size greater or equal to `k` in 
 \bigwedge\limits_{m=n+k+1}^{\left|C\right|}\neg c_m
 \right)
 
-{DSH}''(C, k) \Leftrightarrow \neg CUR''(C, k) \wedge {STD}(C, k)
+{DSH}''(C, k) \Leftrightarrow {STD}(C, k) \wedge \neg CUR''(C, k)
 
 --->
 
@@ -121,18 +122,28 @@ Also note that for lines, the formulas also have to be slightly adapted and that
 
 <div align="center"><img src="images/formulas_3.png" width="100%"> </div>
 
+The blue hexagons with a number in them, 
+as well as the the number of remaining blue hexagons,
+given in the top right corner,
+are simple cardinality constraints just like `STD(C, k)`.
+
+### Other Approaches
+[oprypin](https://github.com/oprypin), the person who created the [SixCells](https://github.com/oprypin/sixcells) level editor,
+used [integer linear programming](https://github.com/oprypin/sixcells/blob/master/solver.py)
+in order to solve the game.
+
 ## Detection of Game Elements
  - I wanted to detect the game elements with classical computer vision methods, instead of neural networks
  - The following game elements need to be detected
    - The game's window
    - The hexagons
-     - Including their type, the numbers within, and which hexagons neighbour which
+     - Including their type, the numbers within, and which hexagons are neighbours
    - The line hints given for a line of hexagons
      - Including the hexagons which are affected by the line hint
    - The number of remaining blue hexagons, given in the top right corner
- - It is assumed that the game is in windowed mode, has a resolution of 1440x900, the brightness is set to 100%, and that the game is not in "night mode".
+ - It is assumed that the game is in windowed mode, has a resolution of 1440x900, the brightness is set to 100%, and that the game is not in "night mode"
  - In order to detect the game elements, first a screenshot is made
- - The position of the window is determined by finding the "[REMAINING](REMAINING.png)" lettering in the top right corner of the game using the `pyautogui.locateOnScreen` function
+ - The position of the window is determined by finding the "[REMAINING](templates/REMAINING.png)" lettering in the top right corner of the game using the `pyautogui.locateOnScreen` function
  - Thresholding is used to segment the foreground and the background
  - The contours of the foreground objects are detected with `cv2.findContours`
    - Every contour with a contour area between 1500 and 1700 is classified as hexagon
@@ -154,7 +165,7 @@ pyautogui
 pysat
 ```
 
-Make sure adjust the settings as follows:
+Make sure to adjust the settings as follows:
  - Resolution: 1440x900
  - Brightness: 100%
  - Language: English
@@ -162,12 +173,15 @@ Make sure adjust the settings as follows:
  - Blue hexagon is bound to the left mouse button
  
 Also mind the following:
- - The executed python script, takes control over your mouse
+ - The executed python script takes control over your mouse
    - If bugs occur, you may not be able to gain its control back
- - The detection of the game elements is not perfect and therefore the AI may fail
+ - The detection of the game elements is not perfect and therefore the AI may fail sometimes (in round about one out of 50 cases)
+   - I could not accumulate all templates e. g. for the blue hexagons w/ numbers the templates for number 16 and 17 are missing 
+   - I hardcoded everything
+   - The code is a mess
  - The AI does not work for levels 1-1 to 2-6 since the hexagons are larger in these levels
 
-With that in mind you can try the AI on your own.
+With that in mind, you can try the AI on your own.
 Start the game and select a level such that the "REMAINING" lettering can be seen in the top right.
 Then execute the [solve.py](solve.py) script and bring the Hexcells window to front. 
 
